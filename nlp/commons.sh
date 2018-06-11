@@ -1,5 +1,6 @@
 #!/bin/sh
 
+export TERM=xterm-color
 
 
 function debug() {

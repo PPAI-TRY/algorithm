@@ -3,6 +3,7 @@ package com.zhixing.nlp
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
+import org.apache.spark.ml.feature.PCA
 import org.apache.spark.ml.linalg.{DenseVector, Vectors}
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
@@ -20,6 +21,8 @@ object NlpApp {
   val TRAIN_DATA_PATH = "../data/train.csv"
   val TEST_DATA_PATH = "../data/test.csv"
 
+  val PCA_K = 16
+
   val DEBUG = 1
 
   var AppName = getClass().getName()
@@ -29,11 +32,20 @@ object NlpApp {
   @transient var sc: SparkContext = null
   @transient var sparkSession: SparkSession = null
 
+  val OUTPUT_HOME = "output"
+
   var questions: RDD[Question] = null
   var wordFeatures: RDD[Word] = null
   var charFeatures: RDD[WordChar] = null
   var trainData: RDD[(Int, Long, Long)] = null  //(label, srcQuestionId, destQuestionId)
   var testData: RDD[(Long, Long)] = null  //(srcQuestionId, destQuestionId)
+
+  var questionWordFeatures: RDD[(Long, List[Double])] = null  // (questionId, wordFeatures)
+  var questionCharFeatures: RDD[(Long, List[Double])] = null  // (questionId, charFeatures)
+  var trainDataDistance: RDD[(Long, Double)] = null   // (label, distance)
+  var trainDataCosine: RDD[(Long, Double)] = null  // (label, cosine)
+  var shrinkWordFeatures: RDD[Word] = null
+
 
   def main(args: Array[String]): Unit = {
 
@@ -42,6 +54,10 @@ object NlpApp {
     sparkSession = SparkSession.builder().appName(AppName).config(conf).getOrCreate()
 
     loadData()
+    initShrinkWordFeatures()
+    initQuestionFeatures()
+    initTrainDataDistance()
+    initTrainDataCosine()
 
     //TODO: TRAIN
     train()
@@ -89,7 +105,7 @@ object NlpApp {
       .cache()
     if(isDebug()) {
       logger.info(s"words count ${wordFeatures.count()}")
-      wordFeatures.take(5).foreach(entry => logger.info(s" -> ${entry}"))
+      wordFeatures.take(5).foreach(entry => logger.info(s" -> features length ${entry.features.toArray.length}"))
     }
 
     //DONE: load questions
@@ -118,12 +134,18 @@ object NlpApp {
       questions.take(5).foreach(entry => logger.info(s" -> ${entry}"))
     }
 
-    trainData = sparkSession.read.csv(TRAIN_DATA_PATH)
-      .rdd
-      .map(row => {
-        val label = row.getAs[Long]("label").toInt
-        val srcId = row.getAs[String]("q1").substring(1).toLong
-        val destId = row.getAs[String]("q2").substring(1).toLong
+    trainData = sc.textFile(TRAIN_DATA_PATH)
+      .filter(line => {
+        val fields = line.split(",")
+        val label = fields(0)
+
+        label != "label"
+      })
+      .map(line => {
+        val fields = line.split(",")
+        val label = fields(0).toInt
+        val srcId = fields(1).substring(1).toLong
+        val destId = fields(2).substring(1).toLong
 
         (label, srcId, destId)
       })
@@ -133,11 +155,16 @@ object NlpApp {
       trainData.take(5).foreach(entry => logger.info(s" -> ${entry}"))
     }
 
-    testData = sparkSession.read.csv(TEST_DATA_PATH)
-      .rdd
-      .map(row => {
-        val srcId = row.getAs[String]("q1").substring(1).toLong
-        val destId = row.getAs[String]("q2").substring(1).toLong
+    testData = sc.textFile(TEST_DATA_PATH)
+      .filter(line => {
+        val fields = line.split(",")
+
+        fields(0) != "q1"
+      })
+      .map(line => {
+        val fields = line.split(",")
+        val srcId = fields(0).substring(1).toLong
+        val destId = fields(1).substring(1).toLong
 
         (srcId, destId)
       })
@@ -149,7 +176,6 @@ object NlpApp {
 
   def train(): Unit = {
     //TODO: select model
-    val questionDf = initTrainDataset()
 
     val lr = new LogisticRegression()
       .setMaxIter(10)
@@ -171,30 +197,20 @@ object NlpApp {
       .setParallelism(3)
 
     //TODO: train model
-    val cvModel = cv.fit(wordDf)
+    //val cvModel = cv.fit(wordDf)
 
 
     //TODO: evaluate model
   }
 
-  def initTrainDataset(): DataFrame = {
-    /*
-    Returns:
-      row -> (label, word features, char features)
-     */
-    val charIdFeaturesMap = charFeatures
-      .map(cf => {
-        (cf.charId, cf.features.toArray)
-      })
-      .collectAsMap()
-
-    val wordIdFeaturesMap = wordFeatures
+  def initQuestionFeatures(): Unit = {
+    val wordIdFeaturesMap = shrinkWordFeatures
       .map(wf => {
         (wf.wid, wf.features.toArray)
       })
       .collectAsMap()
 
-    val questionFeaturesMap = questions
+    questionWordFeatures = questions
       .map(question => {
 
         val sumWordFeatures = question.wordIds
@@ -208,36 +224,114 @@ object NlpApp {
             var c: Array[Double] = Array()
 
             for(i <- 0 to a.length - 1) {
-              c(i) = a(i) + b(i)
+              val v = a(i) + b(i)
+              c = v +: c
             }
+
+            assert(c.length == a.length)
 
             c
           })
+          .toList
 
-        val sumCharFeatures = question.charIds
-          .map(charId => {
-            charIdFeaturesMap.get(charId) match {
-              case Some(v: Array[Double]) => v
-              case _ => Array(0.0)
-            }
-          })
-          .reduce((a, b) => {
-            var c: Array[Double] = Array()
+        (question.qid, sumWordFeatures)
+      })
+    if(isDebug()) {
+      questionWordFeatures.take(5).foreach(entry => logger.info(s"questionWordFeatures -> ${entry}"))
+    }
 
-            for(i <- 0 to a.length - 1) {
-              c(i) = a(i) + b(i)
-            }
+  }
 
-            c
-          })
+  def initShrinkWordFeatures(): Unit = {
+    val source = wordFeatures
+      .map(word => {
+        (word.wid, word.features)
+      })
 
-        (question.qid, (sumWordFeatures, sumCharFeatures))
+    val sourceDf = sparkSession.createDataFrame(source).toDF("wordId", "features")
+
+    shrinkWordFeatures = reducerDimension(sourceDf, "features", "newFeatures")
+      .rdd
+      .map(row => {
+        val wordId = row.getAs[Long]("wordId")
+        val newFeatures = row.getAs[DenseVector]("newFeatures")
+
+        Word(wordId, newFeatures)
+      })
+    if(isDebug()) {
+      logger.info(s"shrinkWordFeatures's features length ${shrinkWordFeatures.first().features.toArray.length}")
+    }
+  }
+
+  def reducerDimension(source: DataFrame, inputCol: String, outputCol: String): DataFrame = {
+    val pca = new PCA()
+      .setK(PCA_K)
+      .setInputCol(inputCol)
+      .setOutputCol(outputCol)
+
+    val pcaModel = pca.fit(source)
+
+    pcaModel.transform(source)
+  }
+
+  def initTrainDataDistance(): Unit = {
+    val questionFeaturesMap = trainData
+      .flatMap(item => {
+        List(item._2, item._3)
+      })
+      .map(questionId => (questionId, 1))
+      .join(questionWordFeatures)
+      .map(item => {
+        (item._1, item._2._2)
       })
       .collectAsMap()
 
-    val trainRdd = trainData
-      .map()
+    trainDataDistance = trainData
+      .map(item => {
+        val label = item._1
+        val srcFeatures = questionFeaturesMap.get(item._2).get.toArray
+        val destFeatures = questionFeaturesMap.get(item._3).get.toArray
+        val srcVectors = Vectors.dense(srcFeatures)
+        val destVectors = Vectors.dense(destFeatures)
 
+        val distance = Vectors.sqdist(srcVectors, destVectors)
+
+        (label, distance)
+      })
+    if(isDebug()) {
+      trainDataDistance.take(5).foreach(entry => logger.info(s"trainDataDistance -> ${entry}"))
+    }
+
+    trainDataDistance.saveAsTextFile(NlpDir(OUTPUT_HOME).trainDataDistance())
+  }
+
+  def initTrainDataCosine(): Unit = {
+    val questionFeaturesMap = trainData
+      .flatMap(item => {
+        List(item._2, item._3)
+      })
+      .map(questionId => (questionId, 1))
+      .join(questionWordFeatures)
+      .map(item => {
+        (item._1, item._2._2)
+      })
+      .collectAsMap()
+
+    trainDataCosine = trainData
+      .map(item => {
+        val label = item._1
+        val srcFeatures = questionFeaturesMap.get(item._2).get.toArray
+        val destFeatures = questionFeaturesMap.get(item._3).get.toArray
+
+        val cosine = CosineSimilarity.cosineSimilarity(srcFeatures, destFeatures)
+
+        (label, cosine)
+      })
+    if(isDebug()) {
+      trainDataCosine.take(5).foreach(entry => logger.info(s"trainDataCosine -> ${entry}"))
+    }
+
+    trainDataCosine.saveAsTextFile(NlpDir(OUTPUT_HOME).trainDataCosine())
   }
 
   def predict(): Unit = {
@@ -253,4 +347,3 @@ object NlpApp {
   }
 
 }
-

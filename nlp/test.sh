@@ -14,19 +14,23 @@ LOG4J_CONF="${SPARK_HOME}/conf/log4j.properties"
 CLASS="com.zhixing.nlp.NlpApp"
 JAR="/Users/xiaotaop/Documents/gitroom/ppai-algorithm/nlp/target/scala-2.11/nlp_2.11-1.0.jar"
 
-EXECUTOR_MEMORY="1G"
+EXECUTOR_MEMORY="6G"
+EXECUTOR_CORES=3
 
 
 function build() {
-    sbt compile package
+    sbt package
 }
 
 
 function run() {
     nohup ${SPARK_SUBMIT} \
-        --master local[2] \
+        --master local[1] \
         --executor-memory ${EXECUTOR_MEMORY} \
+        --driver-memory ${EXECUTOR_MEMORY} \
+        --driver-cores ${EXECUTOR_CORES} \
         --class ${CLASS} \
+        --conf spark.memory.fraction="0.8" \
         ${JAR} &
     spin $!
 }
