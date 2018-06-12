@@ -221,16 +221,7 @@ object NlpApp {
             }
           })
           .reduce((a, b) => {
-            var c: Array[Double] = Array()
-
-            for(i <- 0 to a.length - 1) {
-              val v = a(i) + b(i)
-              c = v +: c
-            }
-
-            assert(c.length == a.length)
-
-            c
+            (a zip b).map(e => e._1 + e._2)
           })
           .toList
 
