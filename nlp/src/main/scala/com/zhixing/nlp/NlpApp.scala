@@ -9,7 +9,7 @@ import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 
 /**
   * Created by xiaotaop on 2018/6/10.
@@ -42,9 +42,10 @@ object NlpApp {
 
   var questionWordFeatures: RDD[(Long, List[Double])] = null  // (questionId, wordFeatures)
   var questionCharFeatures: RDD[(Long, List[Double])] = null  // (questionId, charFeatures)
-  var trainDataDistance: RDD[(Long, Double)] = null   // (label, distance)
-  var trainDataCosine: RDD[(Long, Double)] = null  // (label, cosine)
+  var trainDataDistance: RDD[((Long, Long), (Long, Double))] = null   // ((q1, q2), (label, distance))
+  var trainDataCosine: RDD[((Long, Long), (Long, Double))] = null  // ((q1, q2), (label, cosine))
   var shrinkWordFeatures: RDD[Word] = null
+  var questionPairFeatures: RDD[(Long, Array[Double])] = null
 
 
   def main(args: Array[String]): Unit = {
@@ -58,6 +59,7 @@ object NlpApp {
     initQuestionFeatures()
     initTrainDataDistance()
     initTrainDataCosine()
+    initQuestionPairFeatures()
 
     //TODO: TRAIN
     train()
@@ -177,9 +179,15 @@ object NlpApp {
   def train(): Unit = {
     //TODO: select model
 
+    val pairRdd = questionPairFeatures
+      .map(item => {
+        (item._1, Vectors.dense(item._2))
+      })
+    val pairTrainData = sparkSession.createDataFrame(pairRdd).toDF("label", "features")
+
     val lr = new LogisticRegression()
       .setMaxIter(10)
-      .setLabelCol("questionId")
+      .setLabelCol("label")
       .setFeaturesCol("features")
 
     val pipeline = new Pipeline()
@@ -196,11 +204,17 @@ object NlpApp {
       .setNumFolds(7)
       .setParallelism(3)
 
-    //TODO: train model
-    //val cvModel = cv.fit(wordDf)
-
+    //DONE: train model
+    val cvModel = cv.fit(pairTrainData)
 
     //TODO: evaluate model
+    val evaluateResult = cvModel.transform(pairTrainData)
+    val logLoss = NlpLogLoss(evaluateResult, "prediction", "probility").logloss()
+
+    if(isDebug()) {
+      logger.info(s"logloss is ${logLoss}")
+    }
+
   }
 
   def initQuestionFeatures(): Unit = {
@@ -280,20 +294,36 @@ object NlpApp {
     trainDataDistance = trainData
       .map(item => {
         val label = item._1
-        val srcFeatures = questionFeaturesMap.get(item._2).get.toArray
-        val destFeatures = questionFeaturesMap.get(item._3).get.toArray
+        val q1 = item._2
+        val q2 = item._3
+        val srcFeatures = questionFeaturesMap.get(q1).get.toArray
+        val destFeatures = questionFeaturesMap.get(q2).get.toArray
         val srcVectors = Vectors.dense(srcFeatures)
         val destVectors = Vectors.dense(destFeatures)
 
         val distance = Vectors.sqdist(srcVectors, destVectors)
 
-        (label, distance)
+        ((q1, q2), (label, distance))
       })
     if(isDebug()) {
       trainDataDistance.take(5).foreach(entry => logger.info(s"trainDataDistance -> ${entry}"))
     }
 
-    trainDataDistance.saveAsTextFile(NlpDir(OUTPUT_HOME).trainDataDistance())
+    val toSaveRdd = trainDataDistance
+      .map(item => {
+        val now = Helper().getNow()
+        val createAt = Helper().date2String(Some(now))
+        val q1 = item._1._1
+        val q2 = item._1._2
+        val label = item._2._1
+        val distance = item._2._2
+
+        Row(q1, q2, label, distance, createAt)
+      })
+    sparkSession.createDataFrame(toSaveRdd, NlpTableStruct.trainDataDistance())
+      .write
+      .mode("overwrite")
+      .json(NlpDir(OUTPUT_HOME).trainDataDistance())
   }
 
   def initTrainDataCosine(): Unit = {
@@ -311,18 +341,50 @@ object NlpApp {
     trainDataCosine = trainData
       .map(item => {
         val label = item._1
-        val srcFeatures = questionFeaturesMap.get(item._2).get.toArray
-        val destFeatures = questionFeaturesMap.get(item._3).get.toArray
+        val q1 = item._2
+        val q2 = item._3
+        val srcFeatures = questionFeaturesMap.get(q1).get.toArray
+        val destFeatures = questionFeaturesMap.get(q2).get.toArray
 
         val cosine = CosineSimilarity.cosineSimilarity(srcFeatures, destFeatures)
 
-        (label, cosine)
+        ((q1, q2), (label, cosine))
       })
     if(isDebug()) {
       trainDataCosine.take(5).foreach(entry => logger.info(s"trainDataCosine -> ${entry}"))
     }
 
-    trainDataCosine.saveAsTextFile(NlpDir(OUTPUT_HOME).trainDataCosine())
+    val toSaveRdd = trainDataCosine
+      .map(item => {
+        val now = Helper().getNow()
+        val createAt = Helper().date2String(Some(now))
+        val q1 = item._1._1
+        val q2 = item._1._2
+        val label = item._2._1
+        val cosine = item._2._2
+
+        Row(q1, q2, label, cosine, createAt)
+      })
+    sparkSession.createDataFrame(toSaveRdd, NlpTableStruct.trainDataCosine())
+      .write
+      .mode("overwrite")
+      .json(NlpDir(OUTPUT_HOME).trainDataCosine())
+  }
+
+  def initQuestionPairFeatures(): Unit = {
+    questionPairFeatures = trainDataDistance
+      .join(trainDataCosine)
+      .map(item => {
+        val distance = item._2._1._2
+        val cosine = item._2._2._2
+        val label = item._2._1._1
+
+        (label, Array(distance, cosine))
+      })
+    if(isDebug()) {
+      logger.info(s"questionPairFeatures count ${questionPairFeatures.count()}")
+      questionPairFeatures.take(5).foreach(entry => logger.info(s" --> ${entry}"))
+    }
   }
 
   def predict(): Unit = {
