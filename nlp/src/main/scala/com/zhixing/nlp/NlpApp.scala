@@ -305,21 +305,6 @@ object NlpApp {
 
     val Array(distanceType, angelType, wordDiffType, jaccardType, charJaccardType) = Array(1, 2, 3, 4, 5)
 
-    val distances = sourcePairs
-      .map(item => {
-        val label = item._1
-        val q1 = item._2
-        val q2 = item._3
-        val srcFeatures = questionFeaturesMap.get(q1).get.toArray
-        val destFeatures = questionFeaturesMap.get(q2).get.toArray
-        val srcVectors = Vectors.dense(srcFeatures)
-        val destVectors = Vectors.dense(destFeatures)
-
-        val distance = Vectors.sqdist(srcVectors, destVectors)
-
-        ((q1, q2), Array((label, distance, distanceType)))
-      })
-
     val angels = sourcePairs
       .map(item => {
         val label = item._1
@@ -362,22 +347,19 @@ object NlpApp {
       })
 
 
-    val dest = distances
-      .union(angels)
+    val dest = angels
       .union(jaccards)
       .reduceByKey(_ ++ _)
       .map(item => {
         val q1 = item._1._1
         val q2 = item._1._2
         val label = item._2(0)._1
-        val distance = item._2.find(_._3 == distanceType).get._2
         val angel = item._2.find(_._3 == angelType).get._2
-        //val wordDiff = item._2.find(_._3 == wordDiffType).get._2
         val jaccardIndex = item._2.find(_._3 == jaccardType).get._2
-        //val charJaccardIndex = item._2.find(_._3 == charJaccardType).get._2
 
-        (q1, q2, label, Array(distance, angel, jaccardIndex))
+        (q1, q2, label, Array(angel, jaccardIndex))
       })
+      .cache()
     if(isDebug()) {
       logger.info(s"sourcePair count ${sourcePairs.count()}, dest count ${dest.count()}")
       dest.take(5).foreach(e => logger.info(s" --> ${e}"))
@@ -397,6 +379,7 @@ object NlpApp {
       trainQuestionPairFeatures.take(5).foreach(entry => logger.info(s" --> ${entry}"))
     }
 
+    /*
     val toSaveRdd = featuers
       .map(item => {
         val q1 = item._1
@@ -404,7 +387,6 @@ object NlpApp {
         val label = item._3
         val distance = item._4(0)
         val angel = item._4(1)
-        val wordDiff = item._4(2)
         val createAt = Helper().date2String(Some(Helper().getNow()))
 
         Row(q1, q2, label, distance, angel, wordDiff, createAt)
@@ -413,6 +395,7 @@ object NlpApp {
       .write
       .mode("overwrite")
       .json(NlpDir(OUTPUT_HOME).trainPair())
+      */
   }
 
   def predict(): Unit = {
