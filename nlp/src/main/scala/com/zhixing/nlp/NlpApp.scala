@@ -20,9 +20,9 @@ object NlpApp {
   val TRAIN_DATA_PATH = "../data/train.csv"
   val TEST_DATA_PATH = "../data/test.csv"
 
-  val PCA_K = 16
+  val PCA_K = 32
 
-  val EVALUATE_MODE = 0
+  val EVALUATE_MODE = 1
 
   val DEBUG = 1
 
