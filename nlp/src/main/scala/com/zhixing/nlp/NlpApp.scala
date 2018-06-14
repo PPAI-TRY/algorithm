@@ -20,9 +20,10 @@ object NlpApp {
   val TRAIN_DATA_PATH = "../data/train.csv"
   val TEST_DATA_PATH = "../data/test.csv"
 
-  val PCA_K = 32
+  val PCA_K = 64
+  val LR_MAX_ITER = 200
 
-  val EVALUATE_MODE = 1
+  val EVALUATE_MODE = 0
 
   val DEBUG = 1
 
@@ -180,7 +181,7 @@ object NlpApp {
     val Array(pairTrainData, pairTestData) = pairData.randomSplit(Array(0.8, 0.2))
 
     val lr = new LogisticRegression()
-      .setMaxIter(10)
+      .setMaxIter(LR_MAX_ITER)
       .setLabelCol("label")
       .setFeaturesCol("features")
       .setStandardization(true)
@@ -198,8 +199,8 @@ object NlpApp {
       .setEstimator(pipeline)
       .setEvaluator(new BinaryClassificationEvaluator())
       .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(7)
-      .setParallelism(3)
+      .setNumFolds(8)
+      .setParallelism(4)
 
     //evaluate model
     if(isEvaluate()) {

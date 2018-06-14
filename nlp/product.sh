@@ -28,6 +28,7 @@ function run() {
         --driver-cores ${EXECUTOR_CORES} \
         --class ${CLASS} \
         --conf spark.memory.fraction="0.8" \
+        --conf spark.kryoserializer.buffer.max="1800m" \
         ${JAR} &
     spin $!
 }
