@@ -22,7 +22,7 @@ object NlpApp {
 
   val PCA_K = 16
 
-  val EVALUATE_MODE = 1
+  val EVALUATE_MODE = 0
 
   val DEBUG = 1
 

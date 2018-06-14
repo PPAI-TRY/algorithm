@@ -1,6 +1,6 @@
 #!/bin/sh
 
-
+. ./commons.sh
 
 SBT_BIN="/usr/local/sbt/bin/sbt"
 SPARK_SUBMIT="/usr/local/spark-2.3.0-bin-hadoop2.7/bin/spark-submit"
@@ -8,8 +8,8 @@ SPARK_SUBMIT="/usr/local/spark-2.3.0-bin-hadoop2.7/bin/spark-submit"
 CLASS="com.zhixing.nlp.NlpApp"
 JAR="/home/webapps/ppai-algorithm/nlp/target/scala-2.11/nlp_2.11-1.0.jar"
 
-EXECUTOR_MEMORY="40G"
-EXECUTOR_CORES=4
+EXECUTOR_MEMORY="50G"
+EXECUTOR_CORES=8
 
 
 function build() {
