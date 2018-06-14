@@ -3,7 +3,7 @@
 . ./commons.sh
 
 
-SPARK_HOME="/Users/xiaotaop/Documents/software/spark-2.1.0-bin-hadoop2.7"
+SPARK_HOME="/Users/xiaotaop/Documents/software/spark-2.3.0-bin-hadoop2.7"
 SPARK_SUBMIT="${SPARK_HOME}/bin/spark-submit"
 
 DJ_CMD="/Users/xiaotaop/Documents/pyenvs/dj18/bin/python /Users/xiaotaop/Documents/gitroom/recsys/similar_album/similar/manage.py"
