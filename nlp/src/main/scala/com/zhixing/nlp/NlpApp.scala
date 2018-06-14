@@ -22,7 +22,7 @@ object NlpApp {
 
   val PCA_K = 16
 
-  val EVALUATE_MODE = 1
+  val EVALUATE_MODE = 0
 
   val DEBUG = 1
 
@@ -211,9 +211,12 @@ object NlpApp {
       val logLoss = evaluator.logloss()
       val areaUnderRoc = evaluator.areaUnderRoc()
       val precision = evaluator.precision()
+      val conclusion = s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
+
+      print(conclusion)
 
       if(isDebug()) {
-        logger.info(s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |")
+        logger.info(conclusion)
       }
     }
 
