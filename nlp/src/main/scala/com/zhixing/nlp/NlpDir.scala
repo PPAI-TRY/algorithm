@@ -6,12 +6,16 @@ package com.zhixing.nlp
 
 case class NlpDir(home: String) {
 
-  def trainDataDistance(): String = {
-    home + "/train_data_distance"
+  def trainPair(): String = {
+    home + "/train_pair"
   }
 
-  def trainDataCosine(): String = {
-    home + "/train_data_cosine"
+  def cvTransformed(): String = {
+    home + "/cv_transformed"
+  }
+
+  def prediction(): String = {
+    home + "/prediction"
   }
 
 }

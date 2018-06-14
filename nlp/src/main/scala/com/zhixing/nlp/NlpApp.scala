@@ -5,8 +5,7 @@ import org.apache.spark.ml.classification.LogisticRegression
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
 import org.apache.spark.ml.feature.PCA
 import org.apache.spark.ml.linalg.{DenseVector, Vectors}
-import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
-import org.apache.spark.mllib.evaluation.BinaryClassificationMetrics
+import org.apache.spark.ml.tuning.{CrossValidator, CrossValidatorModel, ParamGridBuilder}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
@@ -22,6 +21,8 @@ object NlpApp {
   val TEST_DATA_PATH = "../data/test.csv"
 
   val PCA_K = 16
+
+  val EVALUATE_MODE = 1
 
   val DEBUG = 1
 
@@ -42,10 +43,10 @@ object NlpApp {
 
   var questionWordFeatures: RDD[(Long, List[Double])] = null  // (questionId, wordFeatures)
   var questionCharFeatures: RDD[(Long, List[Double])] = null  // (questionId, charFeatures)
-  var trainDataDistance: RDD[((Long, Long), (Long, Double))] = null   // ((q1, q2), (label, distance))
-  var trainDataCosine: RDD[((Long, Long), (Long, Double))] = null  // ((q1, q2), (label, cosine))
   var shrinkWordFeatures: RDD[Word] = null
-  var questionPairFeatures: RDD[(Long, Array[Double])] = null
+  var trainQuestionPairFeatures: RDD[(Int, DenseVector)] = null
+
+  var cvModel: CrossValidatorModel = null
 
 
   def main(args: Array[String]): Unit = {
@@ -57,15 +58,13 @@ object NlpApp {
     loadData()
     initShrinkWordFeatures()
     initQuestionFeatures()
-    initTrainDataDistance()
-    initTrainDataCosine()
-    initQuestionPairFeatures()
+    initTrainQuestionPairFeatures()
 
-    //TODO: TRAIN
     train()
 
-    //TODO: predict
-    predict()
+    if (isEvaluate() == false) {
+      predict()
+    }
   }
 
   def loadData(): Unit = {
@@ -177,18 +176,16 @@ object NlpApp {
   }
 
   def train(): Unit = {
-    //TODO: select model
-
-    val pairRdd = questionPairFeatures
-      .map(item => {
-        (item._1, Vectors.dense(item._2))
-      })
-    val pairTrainData = sparkSession.createDataFrame(pairRdd).toDF("label", "features")
+    val pairData = sparkSession.createDataFrame(trainQuestionPairFeatures).toDF("label", "features")
+    val Array(pairTrainData, pairTestData) = pairData.randomSplit(Array(0.8, 0.2))
 
     val lr = new LogisticRegression()
       .setMaxIter(10)
       .setLabelCol("label")
       .setFeaturesCol("features")
+      .setStandardization(true)
+      .setElasticNetParam(0.95)
+      .setFitIntercept(true)
 
     val pipeline = new Pipeline()
       .setStages(Array(lr))
@@ -204,16 +201,24 @@ object NlpApp {
       .setNumFolds(7)
       .setParallelism(3)
 
-    //DONE: train model
-    val cvModel = cv.fit(pairTrainData)
+    //evaluate model
+    if(isEvaluate()) {
+      val evaluateModel = cv.fit(pairTrainData)
+      val evaluateResult = evaluateModel.transform(pairTestData)
+      evaluateResult.write.mode("overwrite").json(NlpDir(OUTPUT_HOME).cvTransformed())
 
-    //TODO: evaluate model
-    val evaluateResult = cvModel.transform(pairTrainData)
-    val logLoss = NlpLogLoss(evaluateResult, "prediction", "probility").logloss()
+      val evaluator = NlpLogLoss(evaluateResult, "label", "prediction", "probability", "rawPrediction")
+      val logLoss = evaluator.logloss()
+      val areaUnderRoc = evaluator.areaUnderRoc()
+      val precision = evaluator.precision()
 
-    if(isDebug()) {
-      logger.info(s"logloss is ${logLoss}")
+      if(isDebug()) {
+        logger.info(s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |")
+      }
     }
+
+    //DONE: train model
+    cvModel = cv.fit(pairData)
 
   }
 
@@ -244,7 +249,6 @@ object NlpApp {
     if(isDebug()) {
       questionWordFeatures.take(5).foreach(entry => logger.info(s"questionWordFeatures -> ${entry}"))
     }
-
   }
 
   def initShrinkWordFeatures(): Unit = {
@@ -279,19 +283,26 @@ object NlpApp {
     pcaModel.transform(source)
   }
 
-  def initTrainDataDistance(): Unit = {
-    val questionFeaturesMap = trainData
-      .flatMap(item => {
-        List(item._2, item._3)
-      })
-      .map(questionId => (questionId, 1))
-      .join(questionWordFeatures)
-      .map(item => {
-        (item._1, item._2._2)
-      })
+  def extractQuestionPairFeatures(sourcePairs: RDD[(Int, Long, Long)]): RDD[(Long, Long, Int, Array[Double])] = {
+    /*
+    Params:
+      sourcePairs: (label, q1, q2)
+    Returns:
+      row is (q1, q2, label, features)
+      features:
+        Array(distance, angel, word diff, jaccard)
+     */
+
+    val questionFeaturesMap = questionWordFeatures
       .collectAsMap()
 
-    trainDataDistance = trainData
+    val questionIdMap = questions
+      .map(q => (q.qid, q))
+      .collectAsMap()
+
+    val Array(distanceType, angelType, wordDiffType, jaccardType, charJaccardType) = Array(1, 2, 3, 4, 5)
+
+    val distances = sourcePairs
       .map(item => {
         val label = item._1
         val q1 = item._2
@@ -303,42 +314,10 @@ object NlpApp {
 
         val distance = Vectors.sqdist(srcVectors, destVectors)
 
-        ((q1, q2), (label, distance))
+        ((q1, q2), Array((label, distance, distanceType)))
       })
-    if(isDebug()) {
-      trainDataDistance.take(5).foreach(entry => logger.info(s"trainDataDistance -> ${entry}"))
-    }
 
-    val toSaveRdd = trainDataDistance
-      .map(item => {
-        val now = Helper().getNow()
-        val createAt = Helper().date2String(Some(now))
-        val q1 = item._1._1
-        val q2 = item._1._2
-        val label = item._2._1
-        val distance = item._2._2
-
-        Row(q1, q2, label, distance, createAt)
-      })
-    sparkSession.createDataFrame(toSaveRdd, NlpTableStruct.trainDataDistance())
-      .write
-      .mode("overwrite")
-      .json(NlpDir(OUTPUT_HOME).trainDataDistance())
-  }
-
-  def initTrainDataCosine(): Unit = {
-    val questionFeaturesMap = trainData
-      .flatMap(item => {
-        List(item._2, item._3)
-      })
-      .map(questionId => (questionId, 1))
-      .join(questionWordFeatures)
-      .map(item => {
-        (item._1, item._2._2)
-      })
-      .collectAsMap()
-
-    trainDataCosine = trainData
+    val angels = sourcePairs
       .map(item => {
         val label = item._1
         val q1 = item._2
@@ -348,55 +327,134 @@ object NlpApp {
 
         val cosine = CosineSimilarity.cosineSimilarity(srcFeatures, destFeatures)
 
-        ((q1, q2), (label, cosine))
+        ((q1, q2), Array((label, cosine, angelType)))
       })
-    if(isDebug()) {
-      trainDataCosine.take(5).foreach(entry => logger.info(s"trainDataCosine -> ${entry}"))
-    }
 
-    val toSaveRdd = trainDataCosine
+    /*
+    val wordDiffs = sourcePairs
       .map(item => {
-        val now = Helper().getNow()
-        val createAt = Helper().date2String(Some(now))
+        val label = item._1
+        val q1 = item._2
+        val q2 = item._3
+        val q1WordCount = questionIdMap.get(q1).get.wordIds.length
+        val q2WordCount = questionIdMap.get(q2).get.wordIds.length
+        val diff = math.abs(q1WordCount - q2WordCount).toDouble
+
+        ((q1, q2), Array((label, diff, wordDiffType)))
+      })
+      */
+
+    val jaccards = sourcePairs
+      .map(item => {
+        val label = item._1
+        val q1 = item._2
+        val q2 = item._3
+        val q1Words = questionIdMap.get(q1).get.wordIds
+        val q2Words = questionIdMap.get(q2).get.wordIds
+        val unionCount = (q1Words ++ q2Words).toSet.size
+        val intersectionCount = q1Words.intersect(q2Words).length
+        val jaccardIndex = intersectionCount.toDouble / unionCount
+
+        ((q1, q2), Array((label, jaccardIndex, jaccardType)))
+      })
+
+
+    val dest = distances
+      .union(angels)
+      .union(jaccards)
+      .reduceByKey(_ ++ _)
+      .map(item => {
         val q1 = item._1._1
         val q2 = item._1._2
-        val label = item._2._1
-        val cosine = item._2._2
+        val label = item._2(0)._1
+        val distance = item._2.find(_._3 == distanceType).get._2
+        val angel = item._2.find(_._3 == angelType).get._2
+        //val wordDiff = item._2.find(_._3 == wordDiffType).get._2
+        val jaccardIndex = item._2.find(_._3 == jaccardType).get._2
+        //val charJaccardIndex = item._2.find(_._3 == charJaccardType).get._2
 
-        Row(q1, q2, label, cosine, createAt)
-      })
-    sparkSession.createDataFrame(toSaveRdd, NlpTableStruct.trainDataCosine())
-      .write
-      .mode("overwrite")
-      .json(NlpDir(OUTPUT_HOME).trainDataCosine())
-  }
-
-  def initQuestionPairFeatures(): Unit = {
-    questionPairFeatures = trainDataDistance
-      .join(trainDataCosine)
-      .map(item => {
-        val distance = item._2._1._2
-        val cosine = item._2._2._2
-        val label = item._2._1._1
-
-        (label, Array(distance, cosine))
+        (q1, q2, label, Array(distance, angel, jaccardIndex))
       })
     if(isDebug()) {
-      logger.info(s"questionPairFeatures count ${questionPairFeatures.count()}")
-      questionPairFeatures.take(5).foreach(entry => logger.info(s" --> ${entry}"))
+      logger.info(s"sourcePair count ${sourcePairs.count()}, dest count ${dest.count()}")
+      dest.take(5).foreach(e => logger.info(s" --> ${e}"))
     }
+
+    dest
+  }
+
+  def initTrainQuestionPairFeatures(): Unit = {
+    val featuers = extractQuestionPairFeatures(trainData)
+    trainQuestionPairFeatures = featuers
+      .map(item => {
+        (item._3, new DenseVector(item._4))
+      })
+    if(isDebug()) {
+      logger.info(s"trainQuestionPairFeatures count ${trainQuestionPairFeatures.count()}")
+      trainQuestionPairFeatures.take(5).foreach(entry => logger.info(s" --> ${entry}"))
+    }
+
+    val toSaveRdd = featuers
+      .map(item => {
+        val q1 = item._1
+        val q2 = item._2
+        val label = item._3
+        val distance = item._4(0)
+        val angel = item._4(1)
+        val wordDiff = item._4(2)
+        val createAt = Helper().date2String(Some(Helper().getNow()))
+
+        Row(q1, q2, label, distance, angel, wordDiff, createAt)
+      })
+    sparkSession.createDataFrame(toSaveRdd, NlpTableStruct.trainPair())
+      .write
+      .mode("overwrite")
+      .json(NlpDir(OUTPUT_HOME).trainPair())
   }
 
   def predict(): Unit = {
-    //TODO: use model
+    val testPairData = testData
+      .map(item => (-1, item._1, item._2))
 
-    //TODO: generate result
+    val testPairFeatures = extractQuestionPairFeatures(testPairData)
+      .map(item => {
+        // (q1, q2, label, features)
+        (item._1, item._2, item._3, Vectors.dense(item._4))
+      })
+
+    val testPairDf = sparkSession.createDataFrame(testPairFeatures)
+      .toDF("q1", "q2", "label", "features")
+
+    val testPredictions = cvModel.transform(testPairDf)
+    testPredictions.show(10)
 
     //TODO: save to disk
+    val toSaveRdd = testPredictions
+      .rdd
+      .map(row => {
+        val q1 = row.getAs[Long]("q1")
+        val q2 = row.getAs[Long]("q2")
+        val prediction = row.getAs[Double]("prediction").toInt
+        val probability = row.getAs[DenseVector]("probability").toArray
+        val p0 = probability(0)
+        val p1 = probability(1)
+        val createAt = Helper().date2String(Some(Helper().getNow()))
+
+        Row(q1, q2, prediction, p0, p1, createAt)
+      })
+    sparkSession.createDataFrame(toSaveRdd, NlpTableStruct.prediction())
+      .write
+      .mode("overwrite")
+      .json(NlpDir(OUTPUT_HOME).prediction())
+
   }
 
   def isDebug(): Boolean = {
     DEBUG == 1
+  }
+
+  def isEvaluate(): Boolean = {
+    EVALUATE_MODE == 1
   }
 
 }

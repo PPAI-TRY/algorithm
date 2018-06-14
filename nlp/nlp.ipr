@@ -70,15 +70,6 @@
         <root url="jar://$USER_HOME$/.ivy2/cache/aopalliance/aopalliance/srcs/aopalliance-1.0-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="SBT: asm:asm:3.1:jar">
-      <CLASSES>
-        <root url="jar://$USER_HOME$/.ivy2/cache/asm/asm/jars/asm-3.1.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES>
-        <root url="jar://$USER_HOME$/.ivy2/cache/asm/asm/srcs/asm-3.1-sources.jar!/" />
-      </SOURCES>
-    </library>
     <library name="SBT: com.carrotsearch:hppc:0.7.2:jar">
       <CLASSES>
         <root url="jar://$USER_HOME$/.ivy2/cache/com.carrotsearch/hppc/bundles/hppc-0.7.2.jar!/" />
@@ -223,15 +214,6 @@
         <root url="jar://$USER_HOME$/.ivy2/cache/com.google.guava/guava/srcs/guava-11.0.2-sources.jar!/" />
       </SOURCES>
     </library>
-    <library name="SBT: com.google.inject.extensions:guice-servlet:3.0:jar">
-      <CLASSES>
-        <root url="jar://$USER_HOME$/.ivy2/cache/com.google.inject.extensions/guice-servlet/jars/guice-servlet-3.0.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES>
-        <root url="jar://$USER_HOME$/.ivy2/cache/com.google.inject.extensions/guice-servlet/srcs/guice-servlet-3.0-sources.jar!/" />
-      </SOURCES>
-    </library>
     <library name="SBT: com.google.inject:guice:3.0:jar">
       <CLASSES>
         <root url="jar://$USER_HOME$/.ivy2/cache/com.google.inject/guice/jars/guice-3.0.jar!/" />
@@ -266,15 +248,6 @@
       <JAVADOC />
       <SOURCES>
         <root url="jar://$USER_HOME$/.ivy2/cache/com.ning/compress-lzf/srcs/compress-lzf-1.0.3-sources.jar!/" />
-      </SOURCES>
-    </library>
-    <library name="SBT: com.sun.xml.bind:jaxb-impl:2.2.3-1:jar">
-      <CLASSES>
-        <root url="jar://$USER_HOME$/.ivy2/cache/com.sun.xml.bind/jaxb-impl/jars/jaxb-impl-2.2.3-1.jar!/" />
-      </CLASSES>
-      <JAVADOC />
-      <SOURCES>
-        <root url="jar://$USER_HOME$/.ivy2/cache/com.sun.xml.bind/jaxb-impl/srcs/jaxb-impl-2.2.3-1-sources.jar!/" />
       </SOURCES>
     </library>
     <library name="SBT: com.thoughtworks.paranamer:paranamer:2.8:jar">

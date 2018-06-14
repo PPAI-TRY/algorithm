@@ -1,25 +1,19 @@
 #!/bin/sh
 
-. ./commons.sh
 
 
-SPARK_HOME="/Users/xiaotaop/Documents/software/spark-2.1.0-bin-hadoop2.7"
-SPARK_SUBMIT="${SPARK_HOME}/bin/spark-submit"
-
-DJ_CMD="/Users/xiaotaop/Documents/pyenvs/dj18/bin/python /Users/xiaotaop/Documents/gitroom/recsys/similar_album/similar/manage.py"
-
-LIB="/Users/xiaotaop/Documents/software/spark-2.0.1-local/jars/mysql-connector-java-5.1.40-bin.jar"
-LOG4J_CONF="${SPARK_HOME}/conf/log4j.properties"
+SBT_BIN="/usr/local/sbt/bin/sbt"
+SPARK_SUBMIT="/usr/local/spark-2.3.0-bin-hadoop2.7/bin/spark-submit"
 
 CLASS="com.zhixing.nlp.NlpApp"
-JAR="/Users/xiaotaop/Documents/gitroom/ppai-algorithm/nlp/target/scala-2.11/nlp_2.11-1.0.jar"
+JAR="/home/webapps/ppai-algorithm/nlp/target/scala-2.11/nlp_2.11-1.0.jar"
 
-EXECUTOR_MEMORY="6G"
-EXECUTOR_CORES=3
+EXECUTOR_MEMORY="40G"
+EXECUTOR_CORES=4
 
 
 function build() {
-    sbt package
+    ${SBT_BIN} package
     if [ ! $? -eq 0 ]; then
         exit 1
     fi
@@ -28,7 +22,7 @@ function build() {
 
 function run() {
     nohup ${SPARK_SUBMIT} \
-        --master local[1] \
+        --master local[2] \
         --executor-memory ${EXECUTOR_MEMORY} \
         --driver-memory ${EXECUTOR_MEMORY} \
         --driver-cores ${EXECUTOR_CORES} \
