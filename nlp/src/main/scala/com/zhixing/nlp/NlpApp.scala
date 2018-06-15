@@ -13,6 +13,12 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
   */
 object NlpApp extends NlpBaseApp {
 
+  override val PCA_K = 64
+  override val LR_MAX_ITER = 200
+
+  override val EVALUATE_MODE = 1
+  override val DEBUG = 0
+
 
   def main(args: Array[String]): Unit = {
 

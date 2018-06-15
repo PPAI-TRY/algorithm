@@ -9,7 +9,7 @@ CLASS="com.zhixing.nlp.NlpApp"
 GBT_CLASS="com.zhixing.nlp.NlpGbtApp"
 JAR="/home/webapps/ppai-algorithm/nlp/target/scala-2.11/nlp_2.11-1.0.jar"
 
-EXECUTOR_MEMORY="50G"
+EXECUTOR_MEMORY="100G"
 EXECUTOR_CORES=8
 
 
@@ -37,7 +37,7 @@ function run() {
 
 function run_gbt() {
     nohup ${SPARK_SUBMIT} \
-        --master local[2] \
+        --master local[*] \
         --executor-memory ${EXECUTOR_MEMORY} \
         --driver-memory ${EXECUTOR_MEMORY} \
         --driver-cores ${EXECUTOR_CORES} \

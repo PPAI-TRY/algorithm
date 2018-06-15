@@ -13,7 +13,9 @@ import org.apache.spark.sql.SparkSession
 object NlpGbtApp extends NlpBaseApp {
 
   override val EVALUATE_MODE = 1
-  override val PCA_K = 16
+  override val DEBUG = 0
+
+  override val PCA_K = 64
   override val LR_MAX_ITER = 10
 
 
@@ -73,7 +75,7 @@ object NlpGbtApp extends NlpBaseApp {
       val precision = evaluator.precision()
       val conclusion = s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
 
-      print(conclusion)
+      println(conclusion)
 
       if(isDebug()) {
         logger.info(conclusion)
