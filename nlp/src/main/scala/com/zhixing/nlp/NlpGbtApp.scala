@@ -1,17 +1,20 @@
 package com.zhixing.nlp
 
+import org.apache.spark.SparkContext
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.LogisticRegression
+import org.apache.spark.ml.classification.GBTClassifier
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
-import org.apache.spark.ml.linalg.{DenseVector, Vectors}
 import org.apache.spark.ml.tuning.{CrossValidator, CrossValidatorModel, ParamGridBuilder}
-import org.apache.spark.{SparkConf, SparkContext}
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.SparkSession
 
 /**
-  * Created by xiaotaop on 2018/6/10.
+  * Created by xiaotaop on 2018/6/15.
   */
-object NlpApp extends NlpBaseApp {
+object NlpGbtApp extends NlpBaseApp {
+
+  override val EVALUATE_MODE = 1
+  override val PCA_K = 16
+  override val LR_MAX_ITER = 10
 
 
   def main(args: Array[String]): Unit = {
@@ -34,21 +37,22 @@ object NlpApp extends NlpBaseApp {
 
   def train(): Unit = {
     val pairData = sparkSession.createDataFrame(trainQuestionPairFeatures).toDF("label", "features")
-    val Array(pairTrainData, pairTestData) = pairData.randomSplit(Array(0.8, 0.2))
 
-    val lr = new LogisticRegression()
-      .setMaxIter(LR_MAX_ITER)
+    val gbt = new GBTClassifier()
       .setLabelCol("label")
       .setFeaturesCol("features")
-      .setStandardization(true)
-      .setElasticNetParam(0.95)
-      .setFitIntercept(true)
+      .setMaxIter(LR_MAX_ITER)
 
     val pipeline = new Pipeline()
-      .setStages(Array(lr))
+      .setStages(Array(gbt))
 
     val paramGrid = new ParamGridBuilder()
-      .addGrid(lr.regParam, Array(1.0, 0.5, 0.2, 0.1, 0.01))
+      .addGrid(gbt.impurity, Array("entropy", "gini"))
+      .addGrid(gbt.featureSubsetStrategy, Array("auto", "all", "onethird", "sqrt", "log2"))
+      .addGrid(gbt.maxBins, Array(8, 16, 32, 64))
+      .addGrid(gbt.maxDepth, Array(1, 3, 5, 7, 9, 12))
+      .addGrid(gbt.minInfoGain, Array(0.0, 0.1, 0.3, 0.5))
+      .addGrid(gbt.minInstancesPerNode, Array(1, 2, 3, 4, 5))
       .build()
 
     val cv = new CrossValidator()
@@ -60,6 +64,8 @@ object NlpApp extends NlpBaseApp {
 
     //evaluate model
     if(isEvaluate()) {
+      val Array(pairTrainData, pairTestData) = pairData.randomSplit(Array(0.8, 0.2))
+
       val evaluateModel = cv.fit(pairTrainData)
       val evaluateResult = evaluateModel.transform(pairTestData)
       evaluateResult.write.mode("overwrite").json(NlpDir(OUTPUT_HOME).cvTransformed())

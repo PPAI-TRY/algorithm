@@ -12,6 +12,7 @@ LIB="/Users/xiaotaop/Documents/software/spark-2.0.1-local/jars/mysql-connector-j
 LOG4J_CONF="${SPARK_HOME}/conf/log4j.properties"
 
 CLASS="com.zhixing.nlp.NlpApp"
+GBT_CLASS="com.zhixing.nlp.NlpGbtApp"
 JAR="/Users/xiaotaop/Documents/gitroom/ppai-algorithm/nlp/target/scala-2.11/nlp_2.11-1.0.jar"
 
 EXECUTOR_MEMORY="6G"
@@ -38,6 +39,17 @@ function run() {
     spin $!
 }
 
+function run_gbt() {
+    nohup ${SPARK_SUBMIT} \
+        --master local[1] \
+        --executor-memory ${EXECUTOR_MEMORY} \
+        --driver-memory ${EXECUTOR_MEMORY} \
+        --driver-cores ${EXECUTOR_CORES} \
+        --class ${GBT_CLASS} \
+        --conf spark.memory.fraction="0.8" \
+        ${JAR} &
+    spin $!
+}
 
 case $1 in
 build)
@@ -47,6 +59,10 @@ run)
     build
     run
 ;;
+run_gbt)
+    build
+    run_gbt
+;;
 generate)
     python generate_submit_file.py $2
 ;;
@@ -55,6 +71,7 @@ generate)
     echo "    cmd:"
     echo "        build"
     echo "        run"
+    echo "        run_gbt"
     echo "        generate"
 ;;
 esac

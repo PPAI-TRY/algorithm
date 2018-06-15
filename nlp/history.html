@@ -1059,6 +1059,7 @@ body .markdown-body
 18/06/13 12:00:40 INFO NlpApp$.train 224: logloss is 0.4597740733475036, areaUnderRoc 0.7627787015321386, precision 0.6980017445087622
 18/06/13 12:05:10 INFO NlpApp$.train 224: logloss is 0.5936869088826483, areaUnderRoc 0.7649598255723261, precision 0.6827693458532649
 18/06/13 12:08:56 INFO NlpApp$.train 224: logloss is 0.38335359135559743, areaUnderRoc 0.7645275427452598, precision 0.6983812486378316</p>
+<p>LR 测试结果</p>
 <table>
 <thead>
 <tr>
@@ -1104,6 +1105,41 @@ body .markdown-body
 <td>0.7122189023431357</td>
 <td>去了word diff 特征</td>
 <td></td>
+</tr>
+<tr>
+<td>0.37174068923067</td>
+<td>0.771493584800794</td>
+<td>0.7054710887033244</td>
+<td>去了distance</td>
+<td></td>
+</tr>
+<tr>
+<td>0.34996816279339726</td>
+<td>0.7956976088330561</td>
+<td>0.726958660264668</td>
+<td>词使用 32 维</td>
+<td></td>
+</tr>
+<tr>
+<td>0.3390989916219645</td>
+<td>0.8013084365136639</td>
+<td>0.7317856793025762</td>
+<td>词使用64维</td>
+<td></td>
+</tr>
+<tr>
+<td>0.4459063629014879</td>
+<td>0.8097741528548501</td>
+<td>0.7433295975146975</td>
+<td>词使用了128维</td>
+<td></td>
+</tr>
+<tr>
+<td>0.3405427556890183</td>
+<td>0.7994421641493923</td>
+<td>0.7303273528485993</td>
+<td>LR迭代100</td>
+<td>0.520982</td>
 </tr>
 </tbody>
 </table></article></body></html>
