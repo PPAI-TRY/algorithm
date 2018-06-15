@@ -42,25 +42,22 @@ object NlpGbtApp extends NlpBaseApp {
       .setLabelCol("label")
       .setFeaturesCol("features")
       .setMaxIter(LR_MAX_ITER)
+      .setFeatureSubsetStrategy("sqrt")
+      .setImpurity("entropy")
 
     val pipeline = new Pipeline()
       .setStages(Array(gbt))
 
     val paramGrid = new ParamGridBuilder()
-      .addGrid(gbt.impurity, Array("entropy", "gini"))
-      .addGrid(gbt.featureSubsetStrategy, Array("auto", "all", "onethird", "sqrt", "log2"))
-      .addGrid(gbt.maxBins, Array(8, 16, 32, 64))
-      .addGrid(gbt.maxDepth, Array(1, 3, 5, 7, 9, 12))
-      .addGrid(gbt.minInfoGain, Array(0.0, 0.1, 0.3, 0.5))
-      .addGrid(gbt.minInstancesPerNode, Array(1, 2, 3, 4, 5))
+      .addGrid(gbt.minInstancesPerNode, Array(1, 3, 5))
       .build()
 
     val cv = new CrossValidator()
       .setEstimator(pipeline)
       .setEvaluator(new BinaryClassificationEvaluator())
       .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(8)
-      .setParallelism(4)
+      .setNumFolds(6)
+      .setParallelism(2)
 
     //evaluate model
     if(isEvaluate()) {
