@@ -173,9 +173,12 @@ class NlpBaseApp extends Serializable {
 
         Word(wordId, newFeatures)
       })
+      .cache()
     if(isDebug()) {
       logger.info(s"shrinkWordFeatures's features length ${shrinkWordFeatures.first().features.toArray.length}")
     }
+
+    wordFeatures.unpersist()
   }
 
   def reducerDimension(source: DataFrame, inputCol: String, outputCol: String): DataFrame = {
@@ -336,23 +339,6 @@ class NlpBaseApp extends Serializable {
       trainQuestionPairFeatures.take(5).foreach(entry => logger.info(s" --> ${entry}"))
     }
 
-    /*
-    val toSaveRdd = featuers
-      .map(item => {
-        val q1 = item._1
-        val q2 = item._2
-        val label = item._3
-        val distance = item._4(0)
-        val angel = item._4(1)
-        val createAt = Helper().date2String(Some(Helper().getNow()))
-
-        Row(q1, q2, label, distance, angel, wordDiff, createAt)
-      })
-    sparkSession.createDataFrame(toSaveRdd, NlpTableStruct.trainPair())
-      .write
-      .mode("overwrite")
-      .json(NlpDir(OUTPUT_HOME).trainPair())
-      */
   }
 
   def isDebug(): Boolean = {

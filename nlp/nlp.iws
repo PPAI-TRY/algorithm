@@ -43,11 +43,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="NlpGbtApp.scala" pinned="false" current-in-tab="true">
+      <file leaf-file-name="NlpGbtApp.scala" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="315">
-              <caret line="59" column="22" lean-forward="false" selection-start-line="59" selection-start-column="22" selection-end-line="59" selection-end-column="22" />
+            <state relative-caret-position="225">
+              <caret line="38" column="99" lean-forward="false" selection-start-line="38" selection-start-column="99" selection-end-line="38" selection-end-column="99" />
               <folding>
                 <element signature="e#25#61#0" expanded="true" />
               </folding>
@@ -65,11 +65,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="NlpBaseApp.scala" pinned="false" current-in-tab="false">
+      <file leaf-file-name="NlpBaseApp.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="300">
-              <caret line="286" column="82" lean-forward="false" selection-start-line="286" selection-start-column="82" selection-end-line="286" selection-end-column="82" />
+            <state relative-caret-position="-39">
+              <caret line="340" column="0" lean-forward="false" selection-start-line="340" selection-start-column="0" selection-end-line="340" selection-end-column="0" />
               <folding>
                 <element signature="e#25#63#0" expanded="true" />
               </folding>
@@ -149,8 +149,8 @@
         <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpApp.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/VectorDistance.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/PairFeatureType.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala" />
       </list>
     </option>
   </component>
@@ -1082,22 +1082,22 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="300">
-          <caret line="286" column="82" lean-forward="false" selection-start-line="286" selection-start-column="82" selection-end-line="286" selection-end-column="82" />
+        <state relative-caret-position="225">
+          <caret line="38" column="99" lean-forward="false" selection-start-line="38" selection-start-column="99" selection-end-line="38" selection-end-column="99" />
           <folding>
-            <element signature="e#25#63#0" expanded="true" />
+            <element signature="e#25#61#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="315">
-          <caret line="59" column="22" lean-forward="false" selection-start-line="59" selection-start-column="22" selection-end-line="59" selection-end-column="22" />
+        <state relative-caret-position="-39">
+          <caret line="340" column="0" lean-forward="false" selection-start-line="340" selection-start-column="0" selection-end-line="340" selection-end-column="0" />
           <folding>
-            <element signature="e#25#61#0" expanded="true" />
+            <element signature="e#25#63#0" expanded="true" />
           </folding>
         </state>
       </provider>
