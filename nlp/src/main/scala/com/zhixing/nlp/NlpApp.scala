@@ -71,10 +71,7 @@ object NlpApp extends NlpBaseApp {
       val conclusion = s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
 
       print(conclusion)
-
-      if(isDebug()) {
-        logger.info(conclusion)
-      }
+      logger.info(conclusion)
     }
 
     //DONE: train model
