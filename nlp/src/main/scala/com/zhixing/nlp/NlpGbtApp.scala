@@ -12,11 +12,11 @@ import org.apache.spark.sql.SparkSession
   */
 object NlpGbtApp extends NlpBaseApp {
 
-  override val EVALUATE_MODE = 0
+  override val EVALUATE_MODE = 1
   override val DEBUG = 0
 
   override val PCA_K = 64
-  override val LR_MAX_ITER = 100
+  override val LR_MAX_ITER = 10
 
 
   def main(args: Array[String]): Unit = {
