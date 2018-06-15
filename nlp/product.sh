@@ -23,7 +23,7 @@ function build() {
 
 function run() {
     nohup ${SPARK_SUBMIT} \
-        --master local[2] \
+        --master local[${EXECUTOR_CORES}] \
         --executor-memory ${EXECUTOR_MEMORY} \
         --driver-memory ${EXECUTOR_MEMORY} \
         --driver-cores ${EXECUTOR_CORES} \
@@ -37,7 +37,7 @@ function run() {
 
 function run_gbt() {
     nohup ${SPARK_SUBMIT} \
-        --master local[*] \
+        --master local[${EXECUTOR_CORES}] \
         --executor-memory ${EXECUTOR_MEMORY} \
         --driver-memory ${EXECUTOR_MEMORY} \
         --driver-cores ${EXECUTOR_CORES} \

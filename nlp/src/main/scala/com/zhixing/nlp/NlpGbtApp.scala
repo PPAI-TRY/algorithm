@@ -12,11 +12,11 @@ import org.apache.spark.sql.SparkSession
   */
 object NlpGbtApp extends NlpBaseApp {
 
-  override val EVALUATE_MODE = 1
+  override val EVALUATE_MODE = 0
   override val DEBUG = 0
 
   override val PCA_K = 64
-  override val LR_MAX_ITER = 10
+  override val LR_MAX_ITER = 100
 
 
   def main(args: Array[String]): Unit = {
@@ -44,21 +44,24 @@ object NlpGbtApp extends NlpBaseApp {
       .setLabelCol("label")
       .setFeaturesCol("features")
       .setMaxIter(LR_MAX_ITER)
-      .setFeatureSubsetStrategy("sqrt")
+      .setMinInstancesPerNode(5)
+      .setStepSize(0.01)
+      .setSubsamplingRate(1.0)
+      .setMaxDepth(5)
+      .setFeatureSubsetStrategy("all")
       .setImpurity("entropy")
 
     val pipeline = new Pipeline()
       .setStages(Array(gbt))
 
     val paramGrid = new ParamGridBuilder()
-      .addGrid(gbt.minInstancesPerNode, Array(1, 3, 5))
       .build()
 
     val cv = new CrossValidator()
       .setEstimator(pipeline)
       .setEvaluator(new BinaryClassificationEvaluator())
       .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(6)
+      .setNumFolds(3)
       .setParallelism(2)
 
     //evaluate model
@@ -75,7 +78,7 @@ object NlpGbtApp extends NlpBaseApp {
       val precision = evaluator.precision()
       val conclusion = s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
 
-      print(conclusion)
+      println(conclusion)
       logger.info(conclusion)
     }
 
