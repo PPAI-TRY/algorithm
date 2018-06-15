@@ -75,11 +75,8 @@ object NlpGbtApp extends NlpBaseApp {
       val precision = evaluator.precision()
       val conclusion = s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
 
-      println(conclusion)
-
-      if(isDebug()) {
-        logger.info(conclusion)
-      }
+      print(conclusion)
+      logger.info(conclusion)
     }
 
     //DONE: train model

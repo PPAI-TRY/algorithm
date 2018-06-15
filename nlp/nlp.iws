@@ -34,8 +34,8 @@
       <file leaf-file-name="NlpApp.scala" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpApp.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-489">
-              <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
+            <state relative-caret-position="441">
+              <caret line="73" column="0" lean-forward="false" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
               <folding>
                 <element signature="e#25#60#0" expanded="true" />
               </folding>
@@ -43,11 +43,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="NlpGbtApp.scala" pinned="false" current-in-tab="false">
+      <file leaf-file-name="NlpGbtApp.scala" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="225">
-              <caret line="38" column="99" lean-forward="false" selection-start-line="38" selection-start-column="99" selection-end-line="38" selection-end-column="99" />
+            <state relative-caret-position="441">
+              <caret line="76" column="5" lean-forward="false" selection-start-line="76" selection-start-column="5" selection-end-line="76" selection-end-column="5" />
               <folding>
                 <element signature="e#25#61#0" expanded="true" />
               </folding>
@@ -65,11 +65,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="NlpBaseApp.scala" pinned="false" current-in-tab="true">
+      <file leaf-file-name="NlpBaseApp.scala" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="-39">
-              <caret line="340" column="0" lean-forward="false" selection-start-line="340" selection-start-column="0" selection-end-line="340" selection-end-column="0" />
+            <state relative-caret-position="-720">
+              <caret line="19" column="0" lean-forward="true" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
               <folding>
                 <element signature="e#25#63#0" expanded="true" />
               </folding>
@@ -146,11 +146,11 @@
         <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpDir.scala" />
         <option value="$PROJECT_DIR$/generate_submit_file.py" />
         <option value="$PROJECT_DIR$/build.sbt" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpApp.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/VectorDistance.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/PairFeatureType.scala" />
-        <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala" />
         <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpApp.scala" />
+        <option value="$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala" />
       </list>
     </option>
   </component>
@@ -1048,16 +1048,6 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpApp.scala">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-489">
-          <caret line="14" column="0" lean-forward="false" selection-start-line="14" selection-start-column="0" selection-end-line="14" selection-end-column="0" />
-          <folding>
-            <element signature="e#25#60#0" expanded="true" />
-          </folding>
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/CosineSimilarity.scala">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="525">
@@ -1082,22 +1072,32 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="225">
-          <caret line="38" column="99" lean-forward="false" selection-start-line="38" selection-start-column="99" selection-end-line="38" selection-end-column="99" />
+        <state relative-caret-position="-720">
+          <caret line="19" column="0" lean-forward="true" selection-start-line="19" selection-start-column="0" selection-end-line="19" selection-end-column="0" />
           <folding>
-            <element signature="e#25#61#0" expanded="true" />
+            <element signature="e#25#63#0" expanded="true" />
           </folding>
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpBaseApp.scala">
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpApp.scala">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-39">
-          <caret line="340" column="0" lean-forward="false" selection-start-line="340" selection-start-column="0" selection-end-line="340" selection-end-column="0" />
+        <state relative-caret-position="441">
+          <caret line="73" column="0" lean-forward="false" selection-start-line="73" selection-start-column="0" selection-end-line="73" selection-end-column="0" />
           <folding>
-            <element signature="e#25#63#0" expanded="true" />
+            <element signature="e#25#60#0" expanded="true" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/src/main/scala/com/zhixing/nlp/NlpGbtApp.scala">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="441">
+          <caret line="76" column="5" lean-forward="false" selection-start-line="76" selection-start-column="5" selection-end-line="76" selection-end-column="5" />
+          <folding>
+            <element signature="e#25#61#0" expanded="true" />
           </folding>
         </state>
       </provider>
