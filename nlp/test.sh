@@ -13,6 +13,7 @@ LOG4J_CONF="${SPARK_HOME}/conf/log4j.properties"
 
 CLASS="com.zhixing.nlp.NlpApp"
 GBT_CLASS="com.zhixing.nlp.NlpGbtApp"
+MLPC_CLASS="com.zhixing.nlp.NlpMlpcApp"
 JAR="/Users/xiaotaop/Documents/gitroom/ppai-algorithm/nlp/target/scala-2.11/nlp_2.11-1.0.jar"
 
 EXECUTOR_MEMORY="6G"
@@ -51,6 +52,19 @@ function run_gbt() {
     spin $!
 }
 
+
+function run_mlpc() {
+    nohup ${SPARK_SUBMIT} \
+        --master local[1] \
+        --executor-memory ${EXECUTOR_MEMORY} \
+        --driver-memory ${EXECUTOR_MEMORY} \
+        --driver-cores ${EXECUTOR_CORES} \
+        --class ${MLPC_CLASS} \
+        --conf spark.memory.fraction="0.8" \
+        ${JAR} &
+    spin $!
+}
+
 case $1 in
 build)
     build
@@ -62,6 +76,10 @@ run)
 run_gbt)
     build
     run_gbt
+;;
+run_mlpc)
+    build
+    run_mlpc
 ;;
 generate)
     python generate_submit_file.py $2
