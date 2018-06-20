@@ -17,7 +17,7 @@ object NlpMlpcApp extends NlpBaseApp {
   override val DEBUG = 0
 
   override val PCA_K = 8
-  val MAX_ITER = 10
+  val MAX_ITER = 20
 
   def main(args: Array[String]): Unit = {
 
@@ -40,7 +40,7 @@ object NlpMlpcApp extends NlpBaseApp {
   def train(): Unit = {
     val pairData = sparkSession.createDataFrame(trainQuestionPairFeatures).toDF("label", "features")
 
-    val layers = Array[Int](5, 9, 7, 2)
+    val layers = Array[Int](5, 7, 5, 2)
     val mplc = new MultilayerPerceptronClassifier()
       .setLabelCol("label")
       .setFeaturesCol("features")
