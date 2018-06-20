@@ -40,13 +40,12 @@ object NlpMlpcApp extends NlpBaseApp {
   def train(): Unit = {
     val pairData = sparkSession.createDataFrame(trainQuestionPairFeatures).toDF("label", "features")
 
-    val layers = Array(5, 9, 7, 2)
+    val layers = Array[Int](5, 2)
     val mplc = new MultilayerPerceptronClassifier()
       .setLabelCol("label")
       .setFeaturesCol("features")
       .setLayers(layers)
-      .setMaxIter(LR_MAX_ITER)
-      .setStepSize(0.1)
+      .setMaxIter(MAX_ITER)
 
     val pipeline = new Pipeline()
       .setStages(Array(mplc))

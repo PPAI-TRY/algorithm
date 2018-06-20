@@ -88,6 +88,7 @@ generate)
     echo "        build"
     echo "        run"
     echo "        run_gbt"
+    echo "        run_mlpc"
     echo "        generate"
 ;;
 esac
