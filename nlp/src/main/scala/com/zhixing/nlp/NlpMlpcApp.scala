@@ -3,7 +3,7 @@ package com.zhixing.nlp
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.Pipeline
 import org.apache.spark.ml.classification.{GBTClassifier, MultilayerPerceptronClassifier}
-import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
+import org.apache.spark.ml.evaluation.{BinaryClassificationEvaluator, MulticlassClassificationEvaluator}
 import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 import org.apache.spark.sql.SparkSession
 
@@ -54,7 +54,7 @@ object NlpMlpcApp extends NlpBaseApp {
 
     val cv = new CrossValidator()
       .setEstimator(pipeline)
-      .setEvaluator(new BinaryClassificationEvaluator())
+      .setEvaluator(new MulticlassClassificationEvaluator())
       .setEstimatorParamMaps(paramGrid)
       .setNumFolds(3)
       .setParallelism(2)
