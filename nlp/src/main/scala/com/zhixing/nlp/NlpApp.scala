@@ -14,8 +14,8 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 object NlpApp extends NlpBaseApp {
   override val OUTPUT_HOME = "output/lr"
 
-  override val PCA_K = 64
-  override val LR_MAX_ITER = 200
+  override val PCA_K = 8
+  override val LR_MAX_ITER = 10
 
   override val EVALUATE_MODE = 1
   override val DEBUG = 0
