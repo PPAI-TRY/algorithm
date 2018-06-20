@@ -276,24 +276,42 @@ class NlpBaseApp extends Serializable {
         ((q1, q2), Array((label, distance, PairFeatureType.Mahattan)))
       })
 
+    val editDistances = sourcePairs
+      .map(item => {
+        val label = item._1
+        val q1 = item._2
+        val q2 = item._3
+        val srcFeatures = questionIdMap.get(q1).get.wordIds.toArray
+        val destFeatures = questionIdMap.get(q2).get.wordIds.toArray
+        val distance = VectorDistance.editDistance(srcFeatures, destFeatures)
+
+        ((q1, q2), Array((label, distance, PairFeatureType.Mahattan)))
+      })
+
     val dest = angels
       .union(jaccards)
       .union(chebyshevs)
       .union(euclideans)
       .union(mahattans)
+      .union(editDistances)
       .reduceByKey(_ ++ _)
       .map(item => {
         val q1 = item._1._1
         val q2 = item._1._2
+        val q1WordLength = questionIdMap.get(q1).get.wordIds.length
+        val q2WordLength = questionIdMap.get(q2).get.wordIds.length
         val label = item._2(0)._1
         val angel = item._2.find(_._3 == PairFeatureType.Angel).get._2
         val jaccardIndex = item._2.find(_._3 == PairFeatureType.Jaccard).get._2
         val euclidean = item._2.find(_._3 == PairFeatureType.Euclidean).get._2
         val mahattan = item._2.find(_._3 == PairFeatureType.Mahattan).get._2
         val chebyshev = item._2.find(_._3 == PairFeatureType.Chebyshev).get._2
+        val editDistance = item._2.find(_._3 == PairFeatureType.EditDistance).get._2
 
         val features = featureType match {
-          case PairFeatureType.All => Array(angel, chebyshev, jaccardIndex, mahattan, euclidean)
+          case PairFeatureType.All =>
+            Array(q1WordLength, q2WordLength, angel, chebyshev, jaccardIndex, mahattan, euclidean,
+              editDistance)
           case PairFeatureType.Angel => Array(angel)
           case PairFeatureType.Chebyshev => Array(chebyshev)
           case PairFeatureType.Jaccard => Array(jaccardIndex)

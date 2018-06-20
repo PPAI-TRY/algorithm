@@ -8,6 +8,9 @@ object PairFeatureType extends Enumeration {
   type PairFeatureType = Value
 
   val All,
+  Q1Length,
+  Q2Length,
+  EditDistance,
   Euclidean,
   Chebyshev,
   Mahattan,
