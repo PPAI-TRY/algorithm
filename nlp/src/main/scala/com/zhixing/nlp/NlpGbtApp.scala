@@ -15,7 +15,7 @@ object NlpGbtApp extends NlpBaseApp {
   override val EVALUATE_MODE = 1
   override val DEBUG = 0
 
-  override val PCA_K = 64
+  override val PCA_K = 8
   override val LR_MAX_ITER = 10
 
 
@@ -28,9 +28,21 @@ object NlpGbtApp extends NlpBaseApp {
     loadData()
     initShrinkWordFeatures()
     initQuestionFeatures()
-    initTrainQuestionPairFeatures()
 
-    train()
+    val featureTypes = Array(
+      PairFeatureType.All,
+      PairFeatureType.Euclidean,
+      PairFeatureType.Mahattan,
+      PairFeatureType.Jaccard,
+      PairFeatureType.Angel,
+      PairFeatureType.Chebyshev
+    )
+
+    for (featureType <- featureTypes) {
+      logger.info(s"pair feature type is ${featureType}")
+      initTrainQuestionPairFeatures(featureType)
+      train()
+    }
 
     if (isEvaluate() == false) {
       predict()

@@ -1,5 +1,6 @@
 package com.zhixing.nlp
 
+import com.zhixing.nlp.PairFeatureType.PairFeatureType
 import org.apache.spark.ml.feature.PCA
 import org.apache.spark.ml.linalg.{DenseVector, Vectors}
 import org.apache.spark.ml.tuning.CrossValidatorModel
@@ -33,6 +34,8 @@ class NlpBaseApp extends Serializable {
   @transient var sparkSession: SparkSession = null
 
   val OUTPUT_HOME = "output"
+
+  val DEFAULT_PAIR_FEATURE_TYPE = PairFeatureType.All
 
   var questions: RDD[Question] = null
   var wordFeatures: RDD[Word] = null
@@ -192,7 +195,9 @@ class NlpBaseApp extends Serializable {
     pcaModel.transform(source)
   }
 
-  def extractQuestionPairFeatures(sourcePairs: RDD[(Int, Long, Long)]): RDD[(Long, Long, Int, Array[Double])] = {
+  def extractQuestionPairFeatures(sourcePairs: RDD[(Int, Long, Long)],
+                                  featureType: PairFeatureType = DEFAULT_PAIR_FEATURE_TYPE):
+    RDD[(Long, Long, Int, Array[Double])] = {
     /*
     very importance
 
@@ -287,7 +292,16 @@ class NlpBaseApp extends Serializable {
         val mahattan = item._2.find(_._3 == PairFeatureType.Mahattan).get._2
         val chebyshev = item._2.find(_._3 == PairFeatureType.Chebyshev).get._2
 
-        (q1, q2, label, Array(angel, jaccardIndex, euclidean, mahattan, chebyshev))
+        val features = featureType match {
+          case PairFeatureType.All => Array(angel, chebyshev, jaccardIndex, mahattan, euclidean)
+          case PairFeatureType.Angel => Array(angel)
+          case PairFeatureType.Chebyshev => Array(chebyshev)
+          case PairFeatureType.Jaccard => Array(jaccardIndex)
+          case PairFeatureType.Mahattan => Array(mahattan)
+          case PairFeatureType.Euclidean => Array(euclidean)
+        }
+
+        (q1, q2, label, features)
       })
       .cache()
     if(isDebug()) {
@@ -328,8 +342,8 @@ class NlpBaseApp extends Serializable {
   }
 
 
-  def initTrainQuestionPairFeatures(): Unit = {
-    val featuers = extractQuestionPairFeatures(trainData)
+  def initTrainQuestionPairFeatures(featureType: PairFeatureType = DEFAULT_PAIR_FEATURE_TYPE): Unit = {
+    val featuers = extractQuestionPairFeatures(trainData, featureType)
     trainQuestionPairFeatures = featuers
       .map(item => {
         (item._3, new DenseVector(item._4))

@@ -7,7 +7,8 @@ object PairFeatureType extends Enumeration {
 
   type PairFeatureType = Value
 
-  val Euclidean,
+  val All,
+  Euclidean,
   Chebyshev,
   Mahattan,
   Angel,
