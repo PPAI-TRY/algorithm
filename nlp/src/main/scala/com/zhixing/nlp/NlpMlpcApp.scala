@@ -2,23 +2,22 @@ package com.zhixing.nlp
 
 import org.apache.spark.SparkContext
 import org.apache.spark.ml.Pipeline
-import org.apache.spark.ml.classification.GBTClassifier
+import org.apache.spark.ml.classification.{GBTClassifier, MultilayerPerceptronClassifier}
 import org.apache.spark.ml.evaluation.BinaryClassificationEvaluator
-import org.apache.spark.ml.tuning.{CrossValidator, CrossValidatorModel, ParamGridBuilder}
+import org.apache.spark.ml.tuning.{CrossValidator, ParamGridBuilder}
 import org.apache.spark.sql.SparkSession
 
 /**
-  * Created by xiaotaop on 2018/6/15.
+  * Created by xiaotaop on 2018/6/20.
   */
-object NlpGbtApp extends NlpBaseApp {
-  override val OUTPUT_HOME = "output/gbt"
+object NlpMlpcApp extends NlpBaseApp {
+  override val OUTPUT_HOME = "output/lmpc"
 
   override val EVALUATE_MODE = 1
   override val DEBUG = 0
 
   override val PCA_K = 8
-  override val LR_MAX_ITER = 10
-
+  val MAX_ITER = 10
 
   def main(args: Array[String]): Unit = {
 
@@ -41,19 +40,14 @@ object NlpGbtApp extends NlpBaseApp {
   def train(): Unit = {
     val pairData = sparkSession.createDataFrame(trainQuestionPairFeatures).toDF("label", "features")
 
-    val gbt = new GBTClassifier()
-      .setLabelCol("label")
-      .setFeaturesCol("features")
+    val layers = Array(5, 9, 7, 2)
+    val mplc = new MultilayerPerceptronClassifier()
+      .setLayers(layers)
       .setMaxIter(LR_MAX_ITER)
-      .setMinInstancesPerNode(5)
-      .setStepSize(0.01)
-      .setSubsamplingRate(1.0)
-      .setMaxDepth(5)
-      .setFeatureSubsetStrategy("all")
-      .setImpurity("entropy")
+      .setStepSize(0.1)
 
     val pipeline = new Pipeline()
-      .setStages(Array(gbt))
+      .setStages(Array(mplc))
 
     val paramGrid = new ParamGridBuilder()
       .build()
@@ -87,5 +81,6 @@ object NlpGbtApp extends NlpBaseApp {
     cvModel = cv.fit(pairData)
 
   }
+
 
 }

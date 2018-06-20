@@ -12,6 +12,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
   * Created by xiaotaop on 2018/6/10.
   */
 object NlpApp extends NlpBaseApp {
+  override val OUTPUT_HOME = "output/lr"
 
   override val PCA_K = 64
   override val LR_MAX_ITER = 200
