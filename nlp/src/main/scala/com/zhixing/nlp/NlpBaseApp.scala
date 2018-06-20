@@ -285,7 +285,7 @@ class NlpBaseApp extends Serializable {
         val destFeatures = questionIdMap.get(q2).get.wordIds.toArray
         val distance = VectorDistance.editDistance(srcFeatures, destFeatures)
 
-        ((q1, q2), Array((label, distance, PairFeatureType.Mahattan)))
+        ((q1, q2), Array((label, distance, PairFeatureType.EditDistance)))
       })
 
     val dest = angels
