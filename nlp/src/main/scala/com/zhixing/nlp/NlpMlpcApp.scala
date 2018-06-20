@@ -42,6 +42,8 @@ object NlpMlpcApp extends NlpBaseApp {
 
     val layers = Array(5, 9, 7, 2)
     val mplc = new MultilayerPerceptronClassifier()
+      .setLabelCol("label")
+      .setFeaturesCol("features")
       .setLayers(layers)
       .setMaxIter(LR_MAX_ITER)
       .setStepSize(0.1)
