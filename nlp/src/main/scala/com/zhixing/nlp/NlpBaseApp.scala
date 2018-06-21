@@ -3,7 +3,7 @@ package com.zhixing.nlp
 import com.zhixing.nlp.PairFeatureType.PairFeatureType
 import org.apache.spark.ml.feature.PCA
 import org.apache.spark.ml.linalg.{DenseVector, Vectors}
-import org.apache.spark.ml.tuning.CrossValidatorModel
+import org.apache.spark.ml.tuning.{CrossValidator, CrossValidatorModel}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.{SparkConf, SparkContext}
@@ -379,6 +379,27 @@ class NlpBaseApp extends Serializable {
 
   def isEvaluate(): Boolean = {
     EVALUATE_MODE == 1
+  }
+
+  def evaluate(cv: CrossValidator, pairTrainData: DataFrame, pairTestData: DataFrame): Unit = {
+
+    val evaluateModel = cv.fit(pairTrainData)
+    val evaluateResult = evaluateModel.transform(pairTestData)
+    evaluateResult.write.mode("overwrite").json(NlpDir(OUTPUT_HOME).cvTransformed())
+
+    val evaluator = NlpLogLoss(evaluateResult, "label", "prediction", "probability", "rawPrediction")
+    val logLoss = evaluator.logloss()
+    val areaUnderRoc = evaluator.areaUnderRoc()
+    val precision = evaluator.precision()
+    val conclusion = s"${AppName} -> logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
+
+    print(conclusion)
+    logger.info(conclusion)
+
+    for (avgMetric <- evaluateModel.avgMetrics) {
+      logger.info(s"avgMetric -> ${avgMetric}")
+    }
+
   }
 
   def predict(): Unit = {

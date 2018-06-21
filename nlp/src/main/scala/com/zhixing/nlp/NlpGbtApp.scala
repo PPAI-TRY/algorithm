@@ -65,26 +65,12 @@ object NlpGbtApp extends NlpBaseApp {
       .setNumFolds(3)
       .setParallelism(2)
 
-    //evaluate model
     if(isEvaluate()) {
       val Array(pairTrainData, pairTestData) = pairData.randomSplit(Array(0.8, 0.2))
-
-      val evaluateModel = cv.fit(pairTrainData)
-      val evaluateResult = evaluateModel.transform(pairTestData)
-      evaluateResult.write.mode("overwrite").json(NlpDir(OUTPUT_HOME).cvTransformed())
-
-      val evaluator = NlpLogLoss(evaluateResult, "label", "prediction", "probability", "rawPrediction")
-      val logLoss = evaluator.logloss()
-      val areaUnderRoc = evaluator.areaUnderRoc()
-      val precision = evaluator.precision()
-      val conclusion = s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
-
-      println(conclusion)
-      logger.info(conclusion)
+      evaluate(cv, pairTrainData, pairTestData)
+    } else {
+      cvModel = cv.fit(pairData)
     }
-
-    //DONE: train model
-    cvModel = cv.fit(pairData)
 
   }
 
