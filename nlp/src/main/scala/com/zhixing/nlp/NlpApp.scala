@@ -62,8 +62,8 @@ object NlpApp extends NlpBaseApp {
       .setEstimator(pipeline)
       .setEvaluator(new BinaryClassificationEvaluator())
       .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(8)
-      .setParallelism(4)
+      .setNumFolds(3)
+      .setParallelism(2)
 
     //evaluate model
     if(isEvaluate()) {
