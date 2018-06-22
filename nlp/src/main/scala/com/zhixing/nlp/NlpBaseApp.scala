@@ -298,8 +298,6 @@ class NlpBaseApp extends Serializable {
       .map(item => {
         val q1 = item._1._1
         val q2 = item._1._2
-        val q1WordLength = questionIdMap.get(q1).get.wordIds.length
-        val q2WordLength = questionIdMap.get(q2).get.wordIds.length
         val label = item._2(0)._1
         val angel = item._2.find(_._3 == PairFeatureType.Angel).get._2
         val jaccardIndex = item._2.find(_._3 == PairFeatureType.Jaccard).get._2
@@ -310,8 +308,7 @@ class NlpBaseApp extends Serializable {
 
         val features = featureType match {
           case PairFeatureType.All =>
-            Array(q1WordLength, q2WordLength, angel, chebyshev, jaccardIndex, mahattan, euclidean,
-              editDistance)
+            Array(angel, chebyshev, jaccardIndex, mahattan)
           case PairFeatureType.Angel => Array(angel)
           case PairFeatureType.Chebyshev => Array(chebyshev)
           case PairFeatureType.Jaccard => Array(jaccardIndex)

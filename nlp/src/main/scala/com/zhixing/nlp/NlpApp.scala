@@ -14,7 +14,7 @@ import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 object NlpApp extends NlpBaseApp {
   override val OUTPUT_HOME = "output/lr"
 
-  override val PCA_K = 8
+  override val PCA_K = 16
   override val LR_MAX_ITER = 10
 
   override val EVALUATE_MODE = 1
@@ -48,13 +48,13 @@ object NlpApp extends NlpBaseApp {
       .setFeaturesCol("features")
       .setStandardization(true)
       .setElasticNetParam(0.95)
-      .setRegParam(0.5)
       .setFitIntercept(true)
 
     val pipeline = new Pipeline()
       .setStages(Array(lr))
 
     val paramGrid = new ParamGridBuilder()
+      .addGrid(lr.regParam, Array(0.01, 0.1, 0.2, 0.5, 1.0))
       .build()
 
     val cv = new CrossValidator()
