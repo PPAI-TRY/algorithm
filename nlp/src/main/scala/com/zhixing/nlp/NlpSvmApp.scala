@@ -59,27 +59,15 @@ object NlpSvmApp extends NlpBaseApp {
       .setEstimator(pipeline)
       .setEvaluator(new BinaryClassificationEvaluator())
       .setEstimatorParamMaps(paramGrid)
-      .setNumFolds(8)
-      .setParallelism(4)
+      .setNumFolds(3)
+      .setParallelism(2)
 
-    //evaluate model
     if(isEvaluate()) {
-      val evaluateModel = cv.fit(pairTrainData)
-      val evaluateResult = evaluateModel.transform(pairTestData)
-      evaluateResult.write.mode("overwrite").json(NlpDir(OUTPUT_HOME).cvTransformed())
-
-      val evaluator = NlpLogLoss(evaluateResult, "label", "prediction", "probability", "rawPrediction")
-      val logLoss = evaluator.logloss()
-      val areaUnderRoc = evaluator.areaUnderRoc()
-      val precision = evaluator.precision()
-      val conclusion = s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
-
-      print(conclusion)
-      logger.info(conclusion)
+      val Array(pairTrainData, pairTestData) = pairData.randomSplit(Array(0.8, 0.2))
+      evaluate(cv, pairTrainData, pairTestData)
+    } else {
+      cvModel = cv.fit(pairData)
     }
-
-    //DONE: train model
-    cvModel = cv.fit(pairData)
 
   }
 

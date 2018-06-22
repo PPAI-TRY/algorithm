@@ -41,7 +41,6 @@ object NlpApp extends NlpBaseApp {
 
   def train(): Unit = {
     val pairData = sparkSession.createDataFrame(trainQuestionPairFeatures).toDF("label", "features")
-    val Array(pairTrainData, pairTestData) = pairData.randomSplit(Array(0.8, 0.2))
 
     val lr = new LogisticRegression()
       .setMaxIter(LR_MAX_ITER)
@@ -65,24 +64,12 @@ object NlpApp extends NlpBaseApp {
       .setNumFolds(3)
       .setParallelism(2)
 
-    //evaluate model
     if(isEvaluate()) {
-      val evaluateModel = cv.fit(pairTrainData)
-      val evaluateResult = evaluateModel.transform(pairTestData)
-      evaluateResult.write.mode("overwrite").json(NlpDir(OUTPUT_HOME).cvTransformed())
-
-      val evaluator = NlpLogLoss(evaluateResult, "label", "prediction", "probability", "rawPrediction")
-      val logLoss = evaluator.logloss()
-      val areaUnderRoc = evaluator.areaUnderRoc()
-      val precision = evaluator.precision()
-      val conclusion = s"logloss, areaUnderRoc, precision, | ${logLoss} | ${areaUnderRoc} | ${precision} | | |"
-
-      print(conclusion)
-      logger.info(conclusion)
+      val Array(pairTrainData, pairTestData) = pairData.randomSplit(Array(0.8, 0.2))
+      evaluate(cv, pairTrainData, pairTestData)
+    } else {
+      cvModel = cv.fit(pairData)
     }
-
-    //DONE: train model
-    cvModel = cv.fit(pairData)
 
   }
 
